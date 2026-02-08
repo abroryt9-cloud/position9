@@ -1,69 +1,47 @@
 import telebot
-from telebot import types
 import os
 
-# Вставь сюда токен, который получишь от @BotFather в Telegram
+# Получаем токен бота из переменных окружения
 TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
-# Создание бота
+# Проверяем, что токен существует
+if not TOKEN:
+    print("Токен не найден! Убедитесь, что он передан через переменные окружения.")
+    exit(1)
+
+# Создаем объект бота
 bot = telebot.TeleBot(TOKEN)
 
-# Стартовое приветствие
+# Приветственное сообщение по команде /start
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(message, 
-                 "Добро пожаловать в Position! — это не ярлык, это репутация.\n\n"
-                 "Мы создаём рубашки из египетского хлопка ELS с индивидуальным кроем.\n\n"
-                 "Используйте команду /catalog, чтобы узнать о нашем ассортименте, или /order для оформления заказа.")
+    bot.reply_to(message, "Position — это не ярлык. Это репутация. \nКоманды: /catalog /order /help")
 
-# Команда /catalog — ссылка на сайт
+# Команда /catalog — отправка ссылки на сайт
 @bot.message_handler(commands=['catalog'])
 def send_catalog(message):
-    bot.reply_to(message, 
-                 "Посмотрите наш каталог здесь: https://abroryt9-cloud.github.io/position/")
+    bot.reply_to(message, "Каталог: https://abroryt9-cloud.github.io/position/")
 
-# Команда /order — запрос модели, размера и телефона
+# Команда /order — инструкция для оформления заказа
 @bot.message_handler(commands=['order'])
-def ask_order(message):
-    msg = bot.reply_to(message, "Какую модель рубашки вы хотите заказать? Напишите название.")
-    bot.register_next_step_handler(msg, ask_size)
+def send_order_instructions(message):
+    bot.reply_to(message, "Для заказа укажите одним сообщением: 1) модель, 2) размер, 3) телефон")
 
-def ask_size(message):
-    model = message.text
-    msg = bot.reply_to(message, f"Вы выбрали модель: {model}. Какой размер вам нужен?")
-    bot.register_next_step_handler(msg, ask_phone, model)
-
-def ask_phone(message, model):
-    size = message.text
-    msg = bot.reply_to(message, "Пожалуйста, оставьте ваш номер телефона для связи.")
-    bot.register_next_step_handler(msg, complete_order, model, size)
-
-def complete_order(message, model, size):
-    phone = message.text
-    bot.reply_to(message, f"Спасибо за ваш заказ!\nМодель: {model}\nРазмер: {size}\nТелефон: {phone}\n\n"
-                          "Мы свяжемся с вами для подтверждения.")
-
-# Команда /help — ответы на частые вопросы
+# Команда /help — отвечает на частые вопросы
 @bot.message_handler(commands=['help'])
 def send_help(message):
-    bot.reply_to(message, 
-                 "Ответы на ваши вопросы:\n\n"
-                 "1. Какие ткани используются?\n"
-                 "Наши рубашки изготовлены из египетского хлопка ELS — лучший выбор для долговечности и комфорта.\n\n"
-                 "2. Как я могу получить рубашку?\n"
-                 "Мы предлагаем индивидуальный крой. Доставка доступна по всей стране.\n")
+    bot.reply_to(message, "Частые вопросы:\nТкань - египетский хлопок ELS\nДоставка - Москва 1-2 дня\nКрой - индивидуальный")
 
-# Ответ на обычные фразы
-@bot.message_handler(func=lambda message: True)
-def default_response(message):
-    text = message.text.lower()
-    
-    if "привет" in text:
-        bot.reply_to(message, "Здравствуйте! Чем могу помочь?")
-    elif "заказ" in text:
-        bot.reply_to(message, "Для оформления заказа используйте команду /order.")
-    else:
-        bot.reply_to(message, "Если вам нужно больше информации, используйте команду /help.")
+# Обработка простых фраз
+@bot.message_handler(func=lambda message: 'привет' in message.text.lower())
+def greet(message):
+    bot.reply_to(message, "Здравствуйте")
 
-# Запуск бота
-bot.polling(none_stop=True)
+@bot.message_handler(func=lambda message: 'заказ' in message.text.lower())
+def order_response(message):
+    bot.reply_to(message, "Используйте /order для оформления заказа")
+
+# Запуск бота (работает в фоне)
+if __name__ == '__main__':
+    print("Бот запущен")
+    bot.polling(none_stop=True, timeout=60)  # Это гарантирует работу бота 24/7
