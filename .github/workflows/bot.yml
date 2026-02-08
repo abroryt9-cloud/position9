@@ -1,31 +1,17 @@
 name: Run Telegram Bot
-
 on:
-  schedule:
-    - cron: "*/10 * * * *"  # Запуск каждые 10 минут
-  workflow_dispatch:  # Также можно запустить вручную через интерфейс GitHub
+  workflow_dispatch:
 
 jobs:
-  bot:
-    runs-on: ubuntu-latest  # Операционная система для выполнения
-
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2  # Клонирование репозитория
-
-      - name: Set up Python
-        uses: actions/setup-python@v2  # Установка Python
-        with:
-          python-version: '3.9'  # Указываем Python версии 3.9
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip  # Обновление pip
-          pip install pyTelegramBotAPI  # Установка библиотеки pyTelegramBotAPI
-
-      - name: Run bot
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}  # Токен из секретов
-        run: |
-          python bot.py  # Запуск бота
-        timeout-minutes: 4  # Таймаут на выполнение задачи (4 минуты)
+    - uses: actions/checkout@v3
+    - name: Install
+      run: pip install pyTelegramBotAPI
+    - name: Run
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      run: python bot.py
